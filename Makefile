@@ -10,9 +10,8 @@ test: build
 docker:
 	env GOOS=linux GOARCH=amd64 go build -o echo-linux-amd64
 	docker build . -t echo
-	docker run --rm --publish 8080:8080 --name echo echo
 
 .PHONY: push
-push:
+push: docker
 	docker tag echo jpedrob/echo
 	docker push jpedrob/echo

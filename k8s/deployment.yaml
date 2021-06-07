@@ -1,0 +1,28 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: echo
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: echo
+    spec:
+      containers:
+      - name: echo
+        image: jpedrob/echo
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+        # env:
+        # - name: DEPLOY
+        #   value: "12"
+        # resources:
+        #   requests:
+        #     cpu: 20m
+        #     memory: 4Mi
+        #   limits:
+        #     cpu: 100m
+        #     memory: 16Mi

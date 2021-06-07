@@ -63,7 +63,8 @@ func rootHandler(res http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	text, _ := json.Marshal(response)
+	res.Header().Add("Content-Type", "application/json")
+	text, _ := json.MarshalIndent(response, "", "  ")
 	fmt.Fprintf(res, "%s", text)
 }
 

@@ -1,0 +1,18 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ingress-rules
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ingress-rules
+  template:
+    metadata:
+      labels:
+        app: ingress-rules
+    spec:
+      containers:
+      - name: ingress-rules
+        image: jpedrob/ingress-rules
+        imagePullPolicy: Always
