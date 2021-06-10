@@ -1,40 +1,39 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"strings"
+	"time"
 
 	"github.com/jpedro/color"
 )
 
-type EchoReply struct {
-	Method  string            `json:"method"`
-	Proto   string            `json:"protocol"`
-	Host    string            `json:"host"`
-	Port    string            `json:"port"`
-	Uri     string            `json:"uri"`
-	Path    string            `json:"path"`
-	Query   string            `json:"query"`
-	Body    string            `json:"body"`
-	Headers map[string]string `json:"headers"`
-	Params  map[string]string `json:"params"`
+func logger(next http.HandlerFunc) http.HandlerFunc {
+	return func(res http.ResponseWriter, req *http.Request) {
+		// Instead of a hard-coded 200 one could capture the status code using a
+		// wrapper around http.ResponseWriter. Check:
+		//
+		//   https://gist.github.com/Boerworz/b683e46ae0761056a636
+		//
+		now := time.Now()
+		next(res, req)
+		log.Printf("%s %s %s %s\n",
+			color.Paint("cyan", "200"),
+			color.Paint("green", req.Method),
+			color.Paint("green", req.URL.Path),
+			color.Paint("gray", fmt.Sprintf("%d µs", time.Since(now).Microseconds())))
+	}
 }
 
 func envHandler(res http.ResponseWriter, req *http.Request) {
-	log.Printf("Request %s %s\n", req.Method, req.RequestURI)
 	sendJson(res, splitEnv())
 }
 
 func systemHandler(res http.ResponseWriter, req *http.Request) {
-	log.Printf("Request %s %s\n", req.Method, req.RequestURI)
-	res.Header().Add("Content-Type", "application/json")
-
 	data := struct {
 		OS struct {
 			Release string
@@ -51,8 +50,6 @@ func systemHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func rootHandler(res http.ResponseWriter, req *http.Request) {
-	log.Printf("Request %s %s\n", req.Method, req.RequestURI)
-
 	host, port := split(req.Host, ":")
 	if host == "" {
 		host = req.Host
@@ -89,52 +86,13 @@ func rootHandler(res http.ResponseWriter, req *http.Request) {
 	sendJson(res, reply)
 }
 
-func sendJson(res http.ResponseWriter, data interface{}) {
-	res.Header().Add("Content-Type", "application/json")
-	text, _ := json.MarshalIndent(data, "", "  ")
-	fmt.Fprintf(res, "%s", text)
-}
-
-func split(text string, separator string) (string, string) {
-	index := strings.Index(text, separator)
-
-	if index < 0 {
-		return "", ""
-	}
-
-	before := text[:index]
-	after := text[index+len(separator):]
-
-	return before, after
-}
-
-func splitEnv() map[string]string {
-	env := make(map[string]string)
-	for _, value := range os.Environ() {
-		key, val := split(value, "=")
-		env[key] = val
-	}
-
-	return env
-}
-
-func splitParams(query string) map[string]string {
-	res := make(map[string]string)
-
-	if len(query) < 1 {
-		return res
-	}
-
-	for _, segment := range strings.Split(query, "&") {
-		key, val := split(segment, "=")
-		res[key] = val
-	}
-
-	return res
-}
-
 func hiHandler(res http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(res, "<h1>Hello you!</h1>")
+}
+
+func crashHandler(res http.ResponseWriter, req *http.Request) {
+	res.WriteHeader(400)
+	fmt.Fprintf(res, "Some men just like to see the world burning...\n")
 }
 
 func main() {
@@ -157,10 +115,11 @@ func main() {
 		listen = ":" + portEnv
 	}
 
-	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/hi", hiHandler)
-	http.HandleFunc("/env", envHandler)
-	http.HandleFunc("/system", systemHandler)
+	http.HandleFunc("/", logger(rootHandler))
+	http.HandleFunc("/hi", logger(hiHandler))
+	http.HandleFunc("/env", logger(envHandler))
+	http.HandleFunc("/system", logger(systemHandler))
+	http.HandleFunc("/crash", logger(crashHandler))
 
 	log.Printf("Using env %s\n", color.Paint("green", envFlag))
 	log.Printf("Starting server on %s\n", color.Paint("green", "http://"+listen))

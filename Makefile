@@ -9,13 +9,13 @@ VERSION = $(shell cat version.txt)
 .PHONY: build
 build:
 	@echo "==> Building locally"
-	go build -o $(NAME)
+	go build -o $(NAME)-local
 
 .PHONY: test
 test: build
 	@echo "==> Running image locally"
-	./$(NAME) --env local
-	rm -fr $(NAME)
+	./$(NAME)-local --env local
+	rm -fr $(NAME)-local
 
 .PHONY: docker
 docker:
@@ -38,4 +38,9 @@ push: docker
 
 .PHONY: deploy
 deploy: push
+	kubectl delete deployment $(NAME) --ignore-not-found
+	kubectl apply -f k8s/deployment.yaml
+
+.PHONY: update
+update: push
 	kubectl set image deployment/$(NAME) echo=$(REPO)/$(NAME):$(VERSION)
