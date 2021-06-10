@@ -1,6 +1,6 @@
 SHA1 = $(shell git --no-pager log -1 --format=%h)
 TIME = $(shell date +'%Y-%m-%d-%H%M%S')
-NAME = echo
+NAME = echoes
 TAG? = $(TIME) #-$(SHA1)
 REPO = jpedrob
 ### Stupid make re-evaluates $(TIME) each time it runs `deploy`

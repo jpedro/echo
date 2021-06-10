@@ -1,5 +1,5 @@
 FROM scratch
 
-COPY echo-linux-amd64 /srv/echo
+COPY echoes-linux-amd64 /srv/echoes
 
-ENTRYPOINT ["/srv/echo"]
+ENTRYPOINT ["/srv/echoes"]

@@ -1,0 +1,15 @@
+{
+    "name": "jpedro-echoes",
+    "scripts": {},
+    "env": {
+        "GOVERSION": "go1.16"
+    },
+    "formation": {},
+    "addons": [],
+    "buildpacks": [
+      {
+        "url": "heroku/go"
+      }
+    ]
+  }
+  

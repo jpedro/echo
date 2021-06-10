@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/jpedro/color"
 )
@@ -20,87 +19,20 @@ const (
 `
 )
 
-func logger(next http.HandlerFunc) http.HandlerFunc {
-	return func(res http.ResponseWriter, req *http.Request) {
-		// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// 		defer func() {
-		// 			r := recover()
-		// 			if r != nil {
-		// 				var err error
-		// 				switch t := r.(type) {
-		// 				case string:
-		// 					err = errors.New(t)
-		// 				case error:
-		// 					err = t
-		// 				default:
-		// 					err = errors.New("Unknown error")
-		// 				}
-		// 				sendMeMail(err)
-		// 				http.Error(w, err.Error(), http.StatusInternalServerError)
-		// 			}
-		// 		}()
-		// 		// h.ServeHTTP(w, r)
-		// 		status := newStatusResponseWriter(res)
-		// 		next.ServeHTTP(status, req)
-
-		// 	})
-		// })
-
-		// defer func() {
-		// 	if r := recover(); r != nil {
-		// 		fmt.Println("Recovered in f", r)
-		// 		// find out exactly what the error was and set err
-		// 		var err error
-		// 		switch value := r.(type) {
-		// 		case string:
-		// 			err = errors.New(value)
-		// 		case error:
-		// 			err = value
-		// 		default:
-		// 			err = errors.New("unknown panic")
-		// 		}
-		// 		if err != nil {
-		// 			fmt.Printf("Error report: %s.\n", err)
-		// 		}
-		// 	}
-		// }()
-
-		started := time.Now()
-
-		status := newStatusResponseWriter(res)
-		next.ServeHTTP(status, req)
-
-		duration := time.Since(started).Nanoseconds()
-		elapsed := fmt.Sprintf("%d ns", duration)
-
-		if duration > 5_000_000_000 {
-			elapsed = fmt.Sprintf("%0.1f sec", float64(duration)/1_000_000_000)
-		} else if duration > 1_000_000 {
-			elapsed = fmt.Sprintf("%0.1f ms", float64(duration)/1_000_000)
-		} else if duration > 1000 {
-			elapsed = fmt.Sprintf("%d µs", duration/1_000)
-		}
-
-		// Instead of hard-coding 200 capture the status code, use a wrapper
-		// around http.ResponseWriter. Check:
-		//
-		//   https://gist.github.com/Boerworz/b683e46ae0761056a636
-		//
-		colorStatus := "cyan"
-		if status.statusCode >= 400 {
-			colorStatus = "red"
-		}
-
-		log.Printf("%s %s %s %s\n",
-			color.Paint(colorStatus, status.statusCode),
-			color.Green(req.Method),
-			color.Green(req.URL.Path),
-			color.Gray(elapsed))
-	}
+type echo struct {
+	Method  string            `json:"method"`
+	Proto   string            `json:"protocol"`
+	Host    string            `json:"host"`
+	Port    string            `json:"port"`
+	Uri     string            `json:"uri"`
+	Headers map[string]string `json:"headers"`
+	Body    string            `json:"body"`
+	Path    string            `json:"path"`
+	Query   string            `json:"query"`
+	Params  map[string]string `json:"params"`
 }
 
 func crashHandler(res http.ResponseWriter, req *http.Request) {
-	// time.Sleep(time.Nanosecond * 2_345)
 	res.WriteHeader(400)
 	fmt.Fprintf(res, "<h1>Crash</h1>\n")
 	fmt.Fprintf(res, "Some men just like to see the world burning...\n")
@@ -142,7 +74,7 @@ func rootHandler(res http.ResponseWriter, req *http.Request) {
 		port = "80 (defaulted)"
 	}
 
-	reply := echoReply{
+	reply := echo{
 		Method:  req.Method,
 		Proto:   req.Proto,
 		Host:    host,
@@ -157,7 +89,7 @@ func rootHandler(res http.ResponseWriter, req *http.Request) {
 
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		log.Fatalf("ERROR Failed to parse body: %s\n", err)
+		log.Fatalf(color.Red("ERROR Failed to parse body: %s\n", err))
 	}
 	reply.Body = string(body)
 

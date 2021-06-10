@@ -1,5 +1,7 @@
-# Echo
+# Echoes
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/jpedro/go-echo)](https://goreportcard.com/report/github.com/jpedro/go-echo)
+[![Go Report Card](https://goreportcard.com/badge/github.com/jpedro/echoes)](https://goreportcard.com/report/github.com/jpedro/echoes)
 
-Server in go that replies the request details back to the client.
+Server that echoes back the request details.
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/jpedro/echoes)

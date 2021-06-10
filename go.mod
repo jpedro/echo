@@ -1,4 +1,4 @@
-module github.com/jpedro/echo
+module github.com/jpedro/echoes
 
 go 1.16
 
