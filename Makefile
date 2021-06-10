@@ -15,6 +15,7 @@ build:
 test: build
 	@echo "==> Running image locally"
 	./$(NAME) --env local
+	rm -fr $(NAME)
 
 .PHONY: docker
 docker:
