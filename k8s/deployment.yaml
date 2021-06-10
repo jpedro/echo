@@ -14,5 +14,8 @@ spec:
       - name: echo
         image: jpedrob/echo
         imagePullPolicy: Always
+        command:
+        - --env
+        - prod
         ports:
         - containerPort: 8080

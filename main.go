@@ -12,6 +12,14 @@ import (
 	"github.com/jpedro/color"
 )
 
+const (
+	USAGE = `USAGE
+    echo --env ENV    # Start the server on environment ENV
+    echo --help       # Shows this help
+
+`
+)
+
 func logger(next http.HandlerFunc) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 		now := time.Now()
@@ -56,15 +64,17 @@ func envHandler(res http.ResponseWriter, req *http.Request) {
 func systemHandler(res http.ResponseWriter, req *http.Request) {
 	data := struct {
 		OS struct {
-			Release string
-		}
+			Release string `json:"release"`
+		} `json:"os"`
 		App struct {
-			Name    string
-			Version string
-		}
+			Name    string `json:"name"`
+			Version string `json:"version"`
+		} `json:"app"`
 	}{}
 	release, _ := ioutil.ReadFile("/etc/os-release")
 	data.OS.Release = string(release)
+	data.App.Name = "echo"
+	data.App.Version = "v0.1.4"
 
 	sendJson(res, data)
 }
@@ -110,10 +120,17 @@ func main() {
 	var listen string
 	var envFlag string
 	var portFlag int
+	var helpFlag bool
 
+	flag.BoolVar(&helpFlag, "help", false, "Shows this help")
 	flag.StringVar(&envFlag, "env", "prod", "Environment (local, prod)")
 	flag.IntVar(&portFlag, "port", 8080, "Server port")
 	flag.Parse()
+
+	if helpFlag {
+		fmt.Print(USAGE)
+		return
+	}
 
 	portEnv := os.Getenv("PORT")
 	if portEnv == "" {

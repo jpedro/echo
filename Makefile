@@ -17,6 +17,11 @@ test: build
 	./$(NAME)-local --env local
 	rm -fr $(NAME)-local
 
+.PHONY: help
+help: build
+	@echo "==> Running image locally"
+	./$(NAME)-local --help
+
 .PHONY: docker
 docker:
 	@echo "==> Building for linux/amd64"
