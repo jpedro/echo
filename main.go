@@ -14,19 +14,39 @@ import (
 
 func logger(next http.HandlerFunc) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		// Instead of a hard-coded 200 one could capture the status code using a
-		// wrapper around http.ResponseWriter. Check:
+		now := time.Now()
+
+		next(res, req)
+
+		duration := time.Since(now).Nanoseconds()
+		elapsed := fmt.Sprintf("%d ns", duration)
+
+		if duration > 5_000_000_000 {
+			elapsed = fmt.Sprintf("%0.1f sec", float64(duration)/1_000_000_000)
+		} else if duration > 1_000_000 {
+			elapsed = fmt.Sprintf("%0.1f ms", float64(duration)/1_000_000)
+		} else if duration > 1000 {
+			elapsed = fmt.Sprintf("%d µs", duration/1_000)
+		}
+
+		// Instead of hard-coding 200 capture the status code using a wrapper
+		// around http.ResponseWriter. Check:
 		//
 		//   https://gist.github.com/Boerworz/b683e46ae0761056a636
 		//
-		now := time.Now()
-		next(res, req)
 		log.Printf("%s %s %s %s\n",
 			color.Paint("cyan", "200"),
 			color.Paint("green", req.Method),
 			color.Paint("green", req.URL.Path),
-			color.Paint("gray", fmt.Sprintf("%d µs", time.Since(now).Microseconds())))
+			color.Paint("gray", elapsed))
 	}
+}
+
+func crashHandler(res http.ResponseWriter, req *http.Request) {
+	// time.Sleep(time.Nanosecond * 2_345)
+	res.WriteHeader(400)
+	fmt.Fprintf(res, "<h1>Crash</h1>\n")
+	fmt.Fprintf(res, "Some men just like to see the world burning...\n")
 }
 
 func envHandler(res http.ResponseWriter, req *http.Request) {
@@ -86,15 +106,6 @@ func rootHandler(res http.ResponseWriter, req *http.Request) {
 	sendJson(res, reply)
 }
 
-func hiHandler(res http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(res, "<h1>Hello you!</h1>")
-}
-
-func crashHandler(res http.ResponseWriter, req *http.Request) {
-	res.WriteHeader(400)
-	fmt.Fprintf(res, "Some men just like to see the world burning...\n")
-}
-
 func main() {
 	var listen string
 	var envFlag string
@@ -116,7 +127,6 @@ func main() {
 	}
 
 	http.HandleFunc("/", logger(rootHandler))
-	http.HandleFunc("/hi", logger(hiHandler))
 	http.HandleFunc("/env", logger(envHandler))
 	http.HandleFunc("/system", logger(systemHandler))
 	http.HandleFunc("/crash", logger(crashHandler))
