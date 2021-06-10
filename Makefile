@@ -48,4 +48,4 @@ deploy: push
 
 .PHONY: update
 update: push
-	kubectl set image deployment/$(NAME) echo=$(REPO)/$(NAME):$(VERSION)
+	kubectl set image deployment/$(NAME) app=$(REPO)/$(NAME):$(VERSION)

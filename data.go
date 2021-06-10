@@ -1,6 +1,6 @@
 package main
 
-type EchoReply struct {
+type echoReply struct {
 	Method  string            `json:"method"`
 	Proto   string            `json:"protocol"`
 	Host    string            `json:"host"`

@@ -8,6 +8,20 @@ import (
 	"strings"
 )
 
+type statusResponseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func newStatusResponseWriter(w http.ResponseWriter) *statusResponseWriter {
+	return &statusResponseWriter{w, http.StatusOK}
+}
+
+func (writer *statusResponseWriter) WriteHeader(code int) {
+	writer.statusCode = code
+	writer.ResponseWriter.WriteHeader(code)
+}
+
 func sendJson(res http.ResponseWriter, data interface{}) {
 	res.Header().Add("Content-Type", "application/json")
 	text, _ := json.MarshalIndent(data, "", "  ")

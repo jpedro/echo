@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	USAGE = `USAGE
+	usage = `USAGE
     echo --env ENV    # Start the server on environment ENV
     echo --help       # Shows this help
 
@@ -22,11 +22,55 @@ const (
 
 func logger(next http.HandlerFunc) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		now := time.Now()
+		// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// 		defer func() {
+		// 			r := recover()
+		// 			if r != nil {
+		// 				var err error
+		// 				switch t := r.(type) {
+		// 				case string:
+		// 					err = errors.New(t)
+		// 				case error:
+		// 					err = t
+		// 				default:
+		// 					err = errors.New("Unknown error")
+		// 				}
+		// 				sendMeMail(err)
+		// 				http.Error(w, err.Error(), http.StatusInternalServerError)
+		// 			}
+		// 		}()
+		// 		// h.ServeHTTP(w, r)
+		// 		status := newStatusResponseWriter(res)
+		// 		next.ServeHTTP(status, req)
 
-		next(res, req)
+		// 	})
+		// })
 
-		duration := time.Since(now).Nanoseconds()
+		// defer func() {
+		// 	if r := recover(); r != nil {
+		// 		fmt.Println("Recovered in f", r)
+		// 		// find out exactly what the error was and set err
+		// 		var err error
+		// 		switch value := r.(type) {
+		// 		case string:
+		// 			err = errors.New(value)
+		// 		case error:
+		// 			err = value
+		// 		default:
+		// 			err = errors.New("unknown panic")
+		// 		}
+		// 		if err != nil {
+		// 			fmt.Printf("Error report: %s.\n", err)
+		// 		}
+		// 	}
+		// }()
+
+		started := time.Now()
+
+		status := newStatusResponseWriter(res)
+		next.ServeHTTP(status, req)
+
+		duration := time.Since(started).Nanoseconds()
 		elapsed := fmt.Sprintf("%d ns", duration)
 
 		if duration > 5_000_000_000 {
@@ -37,16 +81,21 @@ func logger(next http.HandlerFunc) http.HandlerFunc {
 			elapsed = fmt.Sprintf("%d µs", duration/1_000)
 		}
 
-		// Instead of hard-coding 200 capture the status code using a wrapper
+		// Instead of hard-coding 200 capture the status code, use a wrapper
 		// around http.ResponseWriter. Check:
 		//
 		//   https://gist.github.com/Boerworz/b683e46ae0761056a636
 		//
+		colorStatus := "cyan"
+		if status.statusCode >= 400 {
+			colorStatus = "red"
+		}
+
 		log.Printf("%s %s %s %s\n",
-			color.Paint("cyan", "200"),
-			color.Paint("green", req.Method),
-			color.Paint("green", req.URL.Path),
-			color.Paint("gray", elapsed))
+			color.Paint(colorStatus, status.statusCode),
+			color.Green(req.Method),
+			color.Green(req.URL.Path),
+			color.Gray(elapsed))
 	}
 }
 
@@ -57,8 +106,13 @@ func crashHandler(res http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(res, "Some men just like to see the world burning...\n")
 }
 
+func panicHandler(res http.ResponseWriter, req *http.Request) {
+	panic("Catch me if you can")
+}
+
 func envHandler(res http.ResponseWriter, req *http.Request) {
-	sendJson(res, splitEnv())
+	env := splitEnv()
+	sendJson(res, env)
 }
 
 func systemHandler(res http.ResponseWriter, req *http.Request) {
@@ -88,7 +142,7 @@ func rootHandler(res http.ResponseWriter, req *http.Request) {
 		port = "80 (defaulted)"
 	}
 
-	reply := EchoReply{
+	reply := echoReply{
 		Method:  req.Method,
 		Proto:   req.Proto,
 		Host:    host,
@@ -128,7 +182,7 @@ func main() {
 	flag.Parse()
 
 	if helpFlag {
-		fmt.Print(USAGE)
+		fmt.Print(usage)
 		return
 	}
 
@@ -147,8 +201,9 @@ func main() {
 	http.HandleFunc("/env", logger(envHandler))
 	http.HandleFunc("/system", logger(systemHandler))
 	http.HandleFunc("/crash", logger(crashHandler))
+	http.HandleFunc("/panic", logger(panicHandler))
 
-	log.Printf("Using env %s\n", color.Paint("green", envFlag))
-	log.Printf("Starting server on %s\n", color.Paint("green", "http://"+listen))
+	log.Printf("Using env %s\n", color.Green(envFlag))
+	log.Printf("Starting server on %s\n", color.Green("http://"+listen))
 	log.Fatal(http.ListenAndServe(listen, nil))
 }
