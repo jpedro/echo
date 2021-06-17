@@ -6,8 +6,5 @@
     {
       "url": "heroku/go"
     }
-  ],
-  "scripts": {},
-  "formation": {},
-  "addons": []
+  ]
 }
