@@ -34,11 +34,11 @@ func newJsonResponseWriter(w http.ResponseWriter) *jsonResponseWriter {
 	return &jsonResponseWriter{w}
 }
 
-func (res jsonResponseWriter) send(data interface{}) {
-	res.Header().Add("Content-Type", "application/json")
-	text, _ := json.MarshalIndent(data, "", "  ")
-	fmt.Fprintf(res, "%s", text)
-}
+// func (res jsonResponseWriter) send(data interface{}) {
+// 	res.Header().Add("Content-Type", "application/json")
+// 	text, _ := json.MarshalIndent(data, "", "  ")
+// 	fmt.Fprintf(res, "%s", text)
+// }
 
 func logger(next http.HandlerFunc) http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
