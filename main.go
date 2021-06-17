@@ -151,7 +151,7 @@ func main() {
 	addr := ":" + port
 	if runtime.GOOS == "darwin" || envFlag == "local" {
 		addr = "localhost:" + port
-		envFlag = "local"
+		envFlag = "local (mac)"
 	}
 
 	http.HandleFunc("/", logger(rootHandler))

@@ -16,8 +16,22 @@ spec:
       - name: app
         image: jpedrob/echo
         imagePullPolicy: Always
-        env:
-        - name: __VAR__
-          value: __val__
         ports:
         - containerPort: 8080
+        env:
+        - name: __NAME__
+          value: echo-server
+        - name: SHOW_VARS
+          value: __NAME__
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: echo
+spec:
+  type: NodePort
+  selector:
+    app: echo
+  ports:
+    - port: 80
+      targetPort: 8080

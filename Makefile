@@ -43,8 +43,7 @@ push: docker
 
 .PHONY: deploy
 deploy: push
-	kubectl delete deployment $(NAME) --ignore-not-found
-	kubectl apply -f k8s/deployment.yaml
+	kubectl apply -f k8s/app.yaml
 
 .PHONY: update
 update: push
