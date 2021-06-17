@@ -1,0 +1,13 @@
+{
+  "env": {
+    "GOVERSION": "go1.16"
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/go"
+    }
+  ],
+  "scripts": {},
+  "formation": {},
+  "addons": []
+}
