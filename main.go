@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime"
+	"strings"
 
 	"github.com/jpedro/color"
 )
@@ -17,6 +19,10 @@ const (
     echo --help       # Shows this help
 
 `
+)
+
+var (
+	envVars map[string]string
 )
 
 type echo struct {
@@ -30,6 +36,7 @@ type echo struct {
 	Path    string            `json:"path"`
 	Query   string            `json:"query"`
 	Params  map[string]string `json:"params"`
+	Env     map[string]string `json:"env"`
 }
 
 func crashHandler(res http.ResponseWriter, req *http.Request) {
@@ -58,9 +65,10 @@ func systemHandler(res http.ResponseWriter, req *http.Request) {
 		} `json:"app"`
 	}{}
 	release, _ := ioutil.ReadFile("/etc/os-release")
+	version, _ := ioutil.ReadFile("version.txt")
 	data.OS.Release = string(release)
 	data.App.Name = "echo"
-	data.App.Version = "v0.1.4"
+	data.App.Version = string(version)
 
 	sendJson(res, data)
 }
@@ -85,6 +93,7 @@ func rootHandler(res http.ResponseWriter, req *http.Request) {
 		Params:  splitParams(req.URL.Query().Encode()),
 		Body:    "-",
 		Headers: make(map[string]string),
+		Env:     envVars,
 	}
 
 	body, err := ioutil.ReadAll(req.Body)
@@ -103,10 +112,17 @@ func rootHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-	var listen string
 	var envFlag string
 	var portFlag int
 	var helpFlag bool
+
+	log.Print(color.Pale("%+v", struct {
+		OS        string
+		Arch      string
+		CPUs      int
+		GoVersion string
+	}{
+		runtime.GOOS, runtime.GOARCH, runtime.NumCPU(), runtime.Version()}))
 
 	flag.BoolVar(&helpFlag, "help", false, "Shows this help")
 	flag.StringVar(&envFlag, "env", "prod", "Environment (local, prod)")
@@ -118,15 +134,24 @@ func main() {
 		return
 	}
 
-	portEnv := os.Getenv("PORT")
-	if portEnv == "" {
-		portEnv = "8080"
+	envVars = make(map[string]string)
+	showVars := os.Getenv("SHOW_VARS")
+	if showVars != "" {
+		vars := strings.Split(showVars, ",")
+		for _, name := range vars {
+			envVars[name] = os.Getenv(name)
+		}
 	}
 
-	if envFlag == "local" {
-		listen = "localhost:" + portEnv
-	} else {
-		listen = ":" + portEnv
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	addr := ":" + port
+	if runtime.GOOS == "darwin" || envFlag == "local" {
+		addr = "localhost:" + port
+		envFlag = "local"
 	}
 
 	http.HandleFunc("/", logger(rootHandler))
@@ -136,6 +161,7 @@ func main() {
 	http.HandleFunc("/panic", logger(panicHandler))
 
 	log.Printf("Using env %s\n", color.Green(envFlag))
-	log.Printf("Starting server on %s\n", color.Green("http://"+listen))
-	log.Fatal(http.ListenAndServe(listen, nil))
+	log.Printf("Showing vars %s\n", color.Green(envVars))
+	log.Printf("Starting server on %s\n", color.Green("http://"+addr))
+	log.Fatal(http.ListenAndServe(addr, nil))
 }

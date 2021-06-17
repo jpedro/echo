@@ -1,6 +1,6 @@
 SHA1 = $(shell git --no-pager log -1 --format=%h)
 TIME = $(shell date +'%Y-%m-%d-%H%M%S')
-NAME = echoes
+NAME = echo
 TAG? = $(TIME) #-$(SHA1)
 REPO = jpedrob
 ### Stupid make re-evaluates $(TIME) each time it runs `deploy`
@@ -14,7 +14,7 @@ build:
 .PHONY: test
 test: build
 	@echo "==> Running image locally"
-	./$(NAME)-local --env local
+	./$(NAME)-local
 	rm -fr $(NAME)-local
 
 .PHONY: help
