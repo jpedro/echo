@@ -6,7 +6,7 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: echo      
+      app: echo
   template:
     metadata:
       labels:
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: app
-        image: jpedrob/echo
+        image: jpedrob/echo:v0.1.0
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
