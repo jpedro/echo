@@ -26,6 +26,7 @@ var (
 )
 
 type echo struct {
+	Remote  string            `json:"remote"`
 	Method  string            `json:"method"`
 	Proto   string            `json:"protocol"`
 	Host    string            `json:"host"`
@@ -83,6 +84,7 @@ func rootHandler(res http.ResponseWriter, req *http.Request) {
 	}
 
 	reply := echo{
+		Remote:  req.RemoteAddr,
 		Method:  req.Method,
 		Proto:   req.Proto,
 		Host:    host,
