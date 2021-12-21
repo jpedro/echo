@@ -20,9 +20,10 @@ spec:
         - containerPort: 8080
         env:
         - name: __NAME__
-          value: echo-server
+          value: echo
         - name: SHOW_VARS
           value: __NAME__
+
 ---
 apiVersion: v1
 kind: Service

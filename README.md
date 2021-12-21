@@ -1,4 +1,4 @@
-# Echoes
+# Echo
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/jpedro/echo)](https://goreportcard.com/report/github.com/jpedro/echo)
 
